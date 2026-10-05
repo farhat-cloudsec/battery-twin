@@ -19,4 +19,13 @@ Note: all data is simulated. This is a demonstrator, not a production system.
 
 `simulator/simulate.py` publishes a simulated battery reading (voltage, current, temperature) to the `battery/cell1/telemetry` MQTT topic once per second.
 
+
+**Status:** in progress. Infrastructure setup (MQTT broker and TimescaleDB) is done. Simulator is publishing battery readings over MQTT. Ingestion service is consuming readings and saving them to TimescaleDB (Phase 1 complete).
+
+## Ingestion
+
+`ingestion/ingest.py` subscribes to `battery/+/telemetry`, validates each reading with Pydantic, and inserts it into the `readings` hypertable in TimescaleDB.
+
 Run it with:
+$env:POSTGRES_PASSWORD = "twin2026"
+python ingestion/ingest.py
