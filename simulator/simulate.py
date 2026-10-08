@@ -1,6 +1,7 @@
 import json
 import time
 import random
+import threading
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
@@ -14,14 +15,31 @@ client.connect(BROKER, PORT)
 
 voltage = 3.9
 temperature = 25.0
+fault_until = 0  # timestamp until which a fault is active
 
-print(f"Simulator started. Publishing to {TOPIC} every 1 second. Press Ctrl+C to stop.")
+
+def listen_for_fault():
+    global fault_until
+    while True:
+        input()  # waits for you to press Enter
+        fault_until = time.time() + 10
+        print(">>> FAULT INJECTED for 10 seconds <<<")
+
+
+threading.Thread(target=listen_for_fault, daemon=True).start()
+
+print(f"Simulator started. Publishing to {TOPIC} every 1 second.")
+print("Press Enter at any time to inject a 10-second fault. Press Ctrl+C to stop.")
 
 try:
     while True:
         current = -2.0 + random.uniform(-0.1, 0.1)
         voltage += random.uniform(-0.005, 0.005)
         temperature += random.uniform(-0.1, 0.1)
+
+        if time.time() < fault_until:
+            temperature += 15.0  # simulate overheating
+            voltage -= 0.3       # simulate a voltage drop
 
         reading = {
             "cell_id": CELL_ID,
