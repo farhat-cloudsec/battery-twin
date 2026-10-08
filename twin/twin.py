@@ -12,9 +12,15 @@ DB_CONFIG = {
 
 CAPACITY_AH = 2.5  # battery's nominal capacity in amp-hours
 CELL_ID = "cell1"
+R0 = 0.05  # internal resistance in ohms
 
 # Start at 80% charge. In a real system this would come from the last known value.
 soc = 80.0
+
+
+def expected_voltage(soc_value, current):
+    ocv = 3.0 + (soc_value / 100) * 1.2  # simple open-circuit voltage model (3.0V to 4.2V)
+    return ocv - (current * R0)
 
 
 def get_connection():
@@ -35,14 +41,14 @@ def get_new_readings(conn, last_time):
         return cur.fetchall()
 
 
-def save_twin_state(conn, t, cell_id, soc_value):
+def save_twin_state(conn, t, cell_id, soc_value, v_exp):
     with conn.cursor() as cur:
         cur.execute(
             """
-            INSERT INTO twin_state (time, cell_id, soc)
-            VALUES (%s, %s, %s)
+            INSERT INTO twin_state (time, cell_id, soc, expected_voltage)
+            VALUES (%s, %s, %s, %s)
             """,
-            (t, cell_id, soc_value),
+            (t, cell_id, soc_value, v_exp),
         )
     conn.commit()
 
@@ -61,8 +67,9 @@ def main():
                 soc += (current * dt_hours) / CAPACITY_AH * 100
                 soc = max(0.0, min(100.0, soc))  # keep between 0 and 100
 
-                save_twin_state(conn, t, CELL_ID, soc)
-                print(f"{t}  SoC={soc:.2f}%")
+                v_exp = expected_voltage(soc, current)
+                save_twin_state(conn, t, CELL_ID, soc, v_exp)
+                print(f"{t}  SoC={soc:.2f}%  V_expected={v_exp:.3f}V")
                 last_time = t
 
             time.sleep(2)
