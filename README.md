@@ -32,3 +32,4 @@ Run it with:$env:POSTGRES_PASSWORD = "your_password"
 python ingestion/ingest.py
 It also computes the expected voltage from a simple battery model and saves it alongside SoC.
 It also computes the residual (measured minus expected voltage) and raises an alert when the residual exceeds 0.1V.
+The simulator supports fault injection (press Enter while it's running) to simulate a 10-second overheating and voltage-drop event, which the twin correctly detects and flags as alerts.
