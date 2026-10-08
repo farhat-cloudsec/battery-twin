@@ -31,3 +31,4 @@ Note: all data is simulated. This is a demonstrator, not a production system.
 
 Run it with:$env:POSTGRES_PASSWORD = "your_password"
 python ingestion/ingest.py
+It also computes the expected voltage from a simple battery model and saves it alongside SoC.
