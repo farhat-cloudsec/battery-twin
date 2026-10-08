@@ -26,9 +26,9 @@ python ingestion/ingest.py
 
 Note: all data is simulated. This is a demonstrator, not a production system.
 ## Twin
-
 `twin/twin.py` reads new readings, estimates state of charge (SoC) using Coulomb counting, and saves the result to `twin_state`.
 
 Run it with:$env:POSTGRES_PASSWORD = "your_password"
 python ingestion/ingest.py
 It also computes the expected voltage from a simple battery model and saves it alongside SoC.
+It also computes the residual (measured minus expected voltage) and raises an alert when the residual exceeds 0.1V.
