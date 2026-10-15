@@ -1,3 +1,5 @@
+from fastapi.middleware.cors import CORSMiddleware
+
 import os
 from fastapi import FastAPI, HTTPException
 import psycopg2
@@ -12,6 +14,12 @@ DB_CONFIG = {
 }
 
 app = FastAPI(title="Battery Digital Twin API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def get_connection():
@@ -32,21 +40,25 @@ def latest_reading(cell_id: str):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT r.time, r.voltage, r.current, r.temperature,
-                       t.soc, t.expected_voltage, t.residual, t.soh
-                FROM readings r
-                LEFT JOIN twin_state t
-                  ON t.cell_id = r.cell_id AND t.time = r.time
-                WHERE r.cell_id = %s
-                ORDER BY r.time DESC
-                LIMIT 1
+                SELECT
+                    (SELECT row_to_json(r) FROM (
+                        SELECT time, voltage, current, temperature
+                        FROM readings WHERE cell_id = %s
+                        ORDER BY time DESC LIMIT 1
+                    ) r) AS reading,
+                    (SELECT row_to_json(t) FROM (
+                        SELECT soc, expected_voltage, residual, soh
+                        FROM twin_state WHERE cell_id = %s
+                        ORDER BY time DESC LIMIT 1
+                    ) t) AS twin
                 """,
-                (cell_id,),
+                (cell_id, cell_id),
             )
             row = cur.fetchone()
-            if row is None:
+            if row is None or row["reading"] is None:
                 raise HTTPException(status_code=404, detail="No readings found for this cell")
-            return row
+            merged = {**row["reading"], **(row["twin"] or {})}
+            return merged
     finally:
         conn.close()
 
