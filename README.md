@@ -36,3 +36,10 @@ The simulator supports fault injection (press Enter while it's running) to simul
 It also predicts State of Health (SoH) using a polynomial regression model trained on real capacity-fade data from the NASA Prognostics Center of Excellence (PCoE) Li-ion Battery Dataset (cell B0005; Saha & Goebel, 2007), tracked with MLflow (MAE ~0.026 Ah, about 1.4% of nominal capacity).
 
 The twin only processes readings from the time it starts, and the simulator's voltage model accounts for IR drop (current x internal resistance) so it stays consistent with the twin's expected-voltage model.
+## Dashboard
+
+A Next.js dashboard (`dashboard/`) shows live KPI cards (voltage, current, temperature, SoC, SoH), a measured-vs-expected voltage chart, and the alerts list, polling the API every 2 seconds.
+
+Run it with:cd dashboard
+npm run dev
+Then open http://localhost:3000.
