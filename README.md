@@ -43,3 +43,7 @@ A Next.js dashboard (`dashboard/`) shows live KPI cards (voltage, current, tempe
 Run it with:cd dashboard
 npm run dev
 Then open http://localhost:3000.
+## MQTT security
+
+Mosquitto requires authentication (`allow_anonymous false`). Create a user with:
+Then set `MQTT_PASSWORD` as an environment variable before running the simulator and ingestion service.
