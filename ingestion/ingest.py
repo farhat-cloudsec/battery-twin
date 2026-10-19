@@ -8,6 +8,9 @@ BROKER = "localhost"
 PORT = 1883
 TOPIC = "battery/+/telemetry"
 
+MQTT_USERNAME = "twinuser"
+MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "change_me")
+
 DB_CONFIG = {
     "host": "localhost",
     "port": 5432,
@@ -58,6 +61,7 @@ def on_message(client, userdata, msg):
 def main():
     conn = get_connection()
     client = mqtt.Client(userdata={"conn": conn})
+    client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect(BROKER, PORT)
