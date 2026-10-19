@@ -7,3 +7,4 @@ node_modules/
 *.log
 mlruns/
 mlflow.db
+mosquitto/config/passwd

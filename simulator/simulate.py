@@ -1,4 +1,5 @@
 import json
+import os
 import time
 import random
 import threading
@@ -12,8 +13,11 @@ TOPIC = f"battery/{CELL_ID}/telemetry"
 CAPACITY_AH = 2.5
 R0 = 0.05  # must match twin.py's R0 for the expected-voltage comparison to make sense
 
+MQTT_USERNAME = "twinuser"
+MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "change_me")
+
 client = mqtt.Client()
-client.username_pw_set("twinuser", "APNA_MQTT_PASSWORD")
+client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 client.connect(BROKER, PORT)
 
 voltage = 3.9
