@@ -42,18 +42,59 @@ type Alert = {
 };
 
 export default function Home() {
+  // The token lives only in memory (React state), so it is gone after a page refresh.
+  const [token, setToken] = useState<string | null>(null);
+  const [username, setUsername] = useState("admin");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
   const [latest, setLatest] = useState<Latest | null>(null);
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ username, password }),
+      });
+      if (!res.ok) {
+        setLoginError("Incorrect username or password");
+        return;
+      }
+      const data = await res.json();
+      setToken(data.access_token);
+      setPassword("");
+    } catch {
+      setLoginError("Could not reach the API. Is it running?");
+    }
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    setLatest(null);
+    setHistory([]);
+    setAlerts([]);
+  };
+
   useEffect(() => {
+    if (!token) return;
+
     const fetchData = async () => {
+      const headers = { Authorization: `Bearer ${token}` };
       try {
         const [latestRes, historyRes, alertsRes] = await Promise.all([
-          fetch(`${API_BASE}/cells/${CELL_ID}/latest`),
-          fetch(`${API_BASE}/cells/${CELL_ID}/history?minutes=5`),
-          fetch(`${API_BASE}/alerts?limit=10`),
+          fetch(`${API_BASE}/cells/${CELL_ID}/latest`, { headers }),
+          fetch(`${API_BASE}/cells/${CELL_ID}/history?minutes=5`, { headers }),
+          fetch(`${API_BASE}/alerts?limit=10`, { headers }),
         ]);
+        if ([latestRes, historyRes, alertsRes].some((r) => r.status === 401)) {
+          handleLogout(); // token expired or invalid
+          return;
+        }
         if (latestRes.ok) setLatest(await latestRes.json());
         if (historyRes.ok) setHistory(await historyRes.json());
         if (alertsRes.ok) setAlerts(await alertsRes.json());
@@ -65,7 +106,41 @@ export default function Home() {
     fetchData();
     const interval = setInterval(fetchData, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [token]);
+
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center font-sans">
+        <form
+          onSubmit={handleLogin}
+          className="bg-white rounded-lg border border-zinc-200 p-8 w-80 space-y-4"
+        >
+          <h1 className="text-xl font-semibold">Battery Digital Twin</h1>
+          <p className="text-sm text-zinc-500">Sign in to view the dashboard.</p>
+          <input
+            className="w-full border border-zinc-300 rounded px-3 py-2 text-sm"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <input
+            className="w-full border border-zinc-300 rounded px-3 py-2 text-sm"
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {loginError && <p className="text-sm text-red-600">{loginError}</p>}
+          <button
+            type="submit"
+            className="w-full bg-black text-white rounded py-2 text-sm font-medium"
+          >
+            Sign in
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   const chartData = history.map((h) => ({
     time: new Date(h.time).toLocaleTimeString(),
@@ -75,9 +150,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-zinc-50 p-8 font-sans">
-      <h1 className="text-2xl font-semibold mb-6">
-        Battery Digital Twin — {CELL_ID}
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">
+          Battery Digital Twin — {CELL_ID}
+        </h1>
+        <button
+          onClick={handleLogout}
+          className="text-sm border border-zinc-300 rounded px-3 py-1 bg-white"
+        >
+          Sign out
+        </button>
+      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
         <Kpi label="Voltage" value={latest?.voltage} unit="V" />

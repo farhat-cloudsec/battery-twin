@@ -1,7 +1,12 @@
-from fastapi.middleware.cors import CORSMiddleware
-
 import os
-from fastapi import FastAPI, HTTPException
+from datetime import datetime, timedelta
+
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+
 import psycopg2
 import psycopg2.extras
 
@@ -13,6 +18,19 @@ DB_CONFIG = {
     "dbname": "batterytwin",
 }
 
+SECRET_KEY = os.environ.get("JWT_SECRET", "dev-secret-change-me")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+# Demo user. In a real system this would be a database table.
+FAKE_USER = {
+    "username": "admin",
+    "hashed_password": pwd_context.hash(os.environ.get("ADMIN_PASSWORD", "change_me")),
+}
+
 app = FastAPI(title="Battery Digital Twin API")
 app.add_middleware(
     CORSMiddleware,
@@ -20,6 +38,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Invalid or expired token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    return username
 
 
 def get_connection():
@@ -33,8 +74,18 @@ def health():
     return {"status": "ok"}
 
 
+@app.post("/auth/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    if form_data.username != FAKE_USER["username"] or not pwd_context.verify(
+        form_data.password, FAKE_USER["hashed_password"]
+    ):
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+    access_token = create_access_token(data={"sub": form_data.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
 @app.get("/cells/{cell_id}/latest")
-def latest_reading(cell_id: str):
+def latest_reading(cell_id: str, current_user: str = Depends(get_current_user)):
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -64,7 +115,7 @@ def latest_reading(cell_id: str):
 
 
 @app.get("/cells/{cell_id}/history")
-def history(cell_id: str, minutes: int = 30):
+def history(cell_id: str, minutes: int = 30, current_user: str = Depends(get_current_user)):
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -76,7 +127,7 @@ def history(cell_id: str, minutes: int = 30):
                 LEFT JOIN twin_state t
                   ON t.cell_id = r.cell_id AND t.time = r.time
                 WHERE r.cell_id = %s
-                  AND r.time > NOW() - (%s || ' minutes')::INTERVAL
+                  AND r.time > NOW() - (%s * INTERVAL '1 minute')
                 ORDER BY r.time ASC
                 """,
                 (cell_id, minutes),
@@ -87,7 +138,7 @@ def history(cell_id: str, minutes: int = 30):
 
 
 @app.get("/alerts")
-def alerts(limit: int = 20):
+def alerts(limit: int = 20, current_user: str = Depends(get_current_user)):
     conn = get_connection()
     try:
         with conn.cursor() as cur:
