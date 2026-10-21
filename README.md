@@ -47,3 +47,8 @@ Then open http://localhost:3000.
 
 Mosquitto requires authentication (`allow_anonymous false`). Create a user with:
 Then set `MQTT_PASSWORD` as an environment variable before running the simulator and ingestion service.
+## API security
+
+The API uses JWT authentication (`POST /auth/login`). `/cells/*` and `/alerts` require a Bearer token; `/health` is public. Set `ADMIN_PASSWORD` and `JWT_SECRET` as environment variables before starting the API. The dashboard asks for a login and keeps the token in memory only.
+
+Known limitation: the single `admin` user is hard-coded for demo purposes. A real system would store hashed users in the database and support roles.
