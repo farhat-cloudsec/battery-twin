@@ -1,0 +1,23 @@
+# Data pipeline
+paho-mqtt
+psycopg2-binary
+pydantic
+
+# API
+fastapi
+uvicorn
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
+
+# Twin and ML
+pandas
+numpy
+scikit-learn
+joblib
+mlflow
+
+# Tests
+pytest
+httpx
