@@ -52,3 +52,24 @@ Then set `MQTT_PASSWORD` as an environment variable before running the simulator
 The API uses JWT authentication (`POST /auth/login`). `/cells/*` and `/alerts` require a Bearer token; `/health` is public. Set `ADMIN_PASSWORD` and `JWT_SECRET` as environment variables before starting the API. The dashboard asks for a login and keeps the token in memory only.
 
 Known limitation: the single `admin` user is hard-coded for demo purposes. A real system would store hashed users in the database and support roles.
+
+## 🎬 Live Demo
+
+This 10-second demonstration shows the Battery Digital Twin
+processing simulated battery telemetry in real time.
+
+- Live voltage, current, temperature, SoC and SoH monitoring
+- MQTT-based sensor data ingestion
+- Simulated fault injection
+- Automatic anomaly detection and alert generation
+
+**Demo video:**
+
+https://github.com/user-attachments/assets/e9d868ab-142e-4570-9176-cdd728277934
+
+
+
+
+
+
+
