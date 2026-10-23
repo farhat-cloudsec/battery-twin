@@ -1,4 +1,6 @@
 # Battery Digital Twin
+https://github.com/user-attachments/assets/89981ebf-0370-4918-9184-3987479294fb
+
 
 Simulated battery digital twin: MQTT ingestion, TimescaleDB, SoC/SoH estimation, anomaly detection, a Next.js dashboard and a read-only LLM assistant.
 
@@ -65,7 +67,9 @@ processing simulated battery telemetry in real time.
 
 **Demo video:**
 
-https://github.com/user-attachments/assets/e9d868ab-142e-4570-9176-cdd728277934
+https://github.com/user-attachments/assets/89981ebf-0370-4918-9184-3987479294fb
+
+
 
 
 
