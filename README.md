@@ -1,5 +1,14 @@
 # Battery Digital Twin
-https://github.com/user-attachments/assets/89981ebf-0370-4918-9184-3987479294fb
+
+A simulated battery monitoring system featuring real-time
+MQTT telemetry, SoC/SoH estimation, fault injection,
+and anomaly detection.
+
+## 🎬 Project Demo
+
+Watch the 48-second demonstration of the Battery Digital Twin.
+
+[https://github.com/user-attachments/assets/89981ebf-0370-4918-9184-3987479294fb]
 
 
 Simulated battery digital twin: MQTT ingestion, TimescaleDB, SoC/SoH estimation, anomaly detection, a Next.js dashboard and a read-only LLM assistant.
@@ -55,19 +64,7 @@ The API uses JWT authentication (`POST /auth/login`). `/cells/*` and `/alerts` r
 
 Known limitation: the single `admin` user is hard-coded for demo purposes. A real system would store hashed users in the database and support roles.
 
-## 🎬 Live Demo
 
-This 40-second demonstration shows the Battery Digital Twin
-processing simulated battery telemetry in real time.
-
-- Live voltage, current, temperature, SoC and SoH monitoring
-- MQTT-based sensor data ingestion
-- Simulated fault injection
-- Automatic anomaly detection and alert generation
-
-**Demo video:**
-
-https://github.com/user-attachments/assets/89981ebf-0370-4918-9184-3987479294fb
 
 
 
