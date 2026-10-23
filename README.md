@@ -55,7 +55,7 @@ Known limitation: the single `admin` user is hard-coded for demo purposes. A rea
 
 ## 🎬 Live Demo
 
-This 10-second demonstration shows the Battery Digital Twin
+This 40-second demonstration shows the Battery Digital Twin
 processing simulated battery telemetry in real time.
 
 - Live voltage, current, temperature, SoC and SoH monitoring
