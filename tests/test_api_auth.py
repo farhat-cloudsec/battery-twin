@@ -2,7 +2,7 @@ import os
 
 # These must be set before the app is imported, because the API reads them at startup.
 os.environ["ADMIN_PASSWORD"] = "test-admin-password"
-os.environ["JWT_SECRET"] = "test-secret"
+os.environ["JWT_SECRET"] = "test-secret-key-that-is-at-least-32-bytes-long"
 
 from fastapi.testclient import TestClient
 

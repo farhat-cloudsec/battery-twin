@@ -7,7 +7,7 @@ pydantic
 fastapi
 uvicorn
 python-multipart
-python-jose[cryptography]
+PyJWT
 passlib[bcrypt]
 bcrypt==4.0.1
 
