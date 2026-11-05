@@ -63,6 +63,7 @@ Then set `MQTT_PASSWORD` as an environment variable before running the simulator
 The API uses JWT authentication (`POST /auth/login`). `/cells/*` and `/alerts` require a Bearer token; `/health` is public. Set `ADMIN_PASSWORD` and `JWT_SECRET` as environment variables before starting the API. The dashboard asks for a login and keeps the token in memory only.
 
 Known limitation: the single `admin` user is hard-coded for demo purposes. A real system would store hashed users in the database and support roles.
+[![CI](https://github.com/farhat-cloudsec/battery-twin/actions/workflows/ci.yml/badge.svg)](https://github.com/farhat-cloudsec/battery-twin/actions/workflows/ci.yml)
 
 
 
