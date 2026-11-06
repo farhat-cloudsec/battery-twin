@@ -6,7 +6,7 @@ import threading
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
-BROKER = "localhost"
+BROKER = os.environ.get("MQTT_HOST", "localhost")
 PORT = 1883
 CELL_ID = "cell1"
 TOPIC = f"battery/{CELL_ID}/telemetry"
@@ -29,7 +29,10 @@ fault_until = 0  # timestamp until which a fault is active
 def listen_for_fault():
     global fault_until
     while True:
-        input()  # waits for you to press Enter
+        try:
+            input()  # waits for you to press Enter
+        except EOFError:
+            return  # no keyboard attached (for example inside a container)
         fault_until = time.time() + 10
         print(">>> FAULT INJECTED for 10 seconds <<<")
 
