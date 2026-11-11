@@ -6,7 +6,7 @@ import psycopg2
 from datetime import datetime, timezone
 
 DB_CONFIG = {
-    "host": "localhost",
+    "host": os.environ.get("POSTGRES_HOST", "localhost"),
     "port": 5432,
     "user": "twin",
     "password": os.environ.get("POSTGRES_PASSWORD", "change_me"),

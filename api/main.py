@@ -12,7 +12,7 @@ import psycopg2
 import psycopg2.extras
 
 DB_CONFIG = {
-    "host": "localhost",
+    "host": os.environ.get("POSTGRES_HOST", "localhost"),
     "port": 5432,
     "user": "twin",
     "password": os.environ.get("POSTGRES_PASSWORD", "change_me"),
@@ -35,7 +35,7 @@ FAKE_USER = {
 app = FastAPI(title="Battery Digital Twin API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[os.environ.get("ALLOWED_ORIGIN", "http://localhost:3000")],
     allow_methods=["*"],
     allow_headers=["*"],
 )

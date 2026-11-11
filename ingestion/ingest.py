@@ -4,7 +4,7 @@ import psycopg2
 from pydantic import BaseModel, ValidationError
 import paho.mqtt.client as mqtt
 
-BROKER = "localhost"
+BROKER = os.environ.get("MQTT_HOST", "localhost")
 PORT = 1883
 TOPIC = "battery/+/telemetry"
 
@@ -12,7 +12,7 @@ MQTT_USERNAME = "twinuser"
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "change_me")
 
 DB_CONFIG = {
-    "host": "localhost",
+    "host": os.environ.get("POSTGRES_HOST", "localhost"),
     "port": 5432,
     "user": "twin",
     "password": os.environ.get("POSTGRES_PASSWORD", "change_me"),
