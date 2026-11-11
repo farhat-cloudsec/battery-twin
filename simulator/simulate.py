@@ -16,9 +16,27 @@ R0 = 0.05  # must match twin.py's R0 for the expected-voltage comparison to make
 MQTT_USERNAME = "twinuser"
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "change_me")
 
+connected = threading.Event()
+
+
+def on_connect(client, userdata, flags, rc, properties=None):
+    if rc == 0:
+        print("Connected to MQTT broker.")
+        connected.set()
+    else:
+        print(f"MQTT connection refused (rc={rc}). Check MQTT_USERNAME / MQTT_PASSWORD.")
+
+
 client = mqtt.Client()
 client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
+client.on_connect = on_connect
 client.connect(BROKER, PORT)
+client.loop_start()
+
+if not connected.wait(timeout=10):
+    print("Could not log in to the MQTT broker within 10 seconds. Exiting.")
+    client.loop_stop()
+    raise SystemExit(1)
 
 voltage = 3.9
 temperature = 25.0
@@ -72,4 +90,6 @@ try:
 
 except KeyboardInterrupt:
     print("\nSimulator stopped.")
+finally:
+    client.loop_stop()
     client.disconnect()

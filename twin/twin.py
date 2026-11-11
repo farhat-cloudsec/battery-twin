@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 DB_CONFIG = {
     "host": os.environ.get("POSTGRES_HOST", "localhost"),
-    "port": 5432,
+    "port": int(os.environ.get("POSTGRES_PORT", "5432")),
     "user": "twin",
     "password": os.environ.get("POSTGRES_PASSWORD", "change_me"),
     "dbname": "batterytwin",
