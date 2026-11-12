@@ -17,9 +17,9 @@ CAPACITY_AH = 2.5  # battery's nominal capacity in amp-hours (used for SoC)
 CELL_ID = "cell1"
 R0 = 0.05  # internal resistance in ohms
 RESIDUAL_THRESHOLD = 0.1  # volts; above this, we flag an anomaly
+DEFAULT_SOC = 80.0  # used only on the very first start, when the database is empty
 
-# Start at 80% charge. In a real system this would come from the last known value.
-soc = 80.0
+soc = DEFAULT_SOC
 cycle_count = 0  # simple proxy for "how aged" the simulated cell is
 
 # Load the SoH model trained on real NASA battery data
@@ -41,6 +41,21 @@ def predict_soh(cycle):
 
 def get_connection():
     return psycopg2.connect(**DB_CONFIG)
+
+
+def load_last_state(conn):
+    """Resume from the last saved twin state so a restart does not reset SoC and aging."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT soc FROM twin_state WHERE cell_id = %s ORDER BY time DESC LIMIT 1",
+            (CELL_ID,),
+        )
+        row = cur.fetchone()
+        cur.execute("SELECT COUNT(*) FROM twin_state WHERE cell_id = %s", (CELL_ID,))
+        count = cur.fetchone()[0]
+    if row is None:
+        return DEFAULT_SOC, 0.0
+    return float(row[0]), count / 3600  # same aging rule as below: 1/3600 per reading
 
 
 def get_new_readings(conn, last_time):
@@ -84,9 +99,10 @@ def save_alert(conn, t, cell_id, message):
 def main():
     global soc, cycle_count
     conn = get_connection()
+    soc, cycle_count = load_last_state(conn)
     last_time = datetime.now(timezone.utc).isoformat()  # only process readings from now onward
 
-    print("Twin service started. Press Ctrl+C to stop.")
+    print(f"Twin service started. Resuming from SoC={soc:.2f}%. Press Ctrl+C to stop.")
     try:
         while True:
             rows = get_new_readings(conn, last_time)

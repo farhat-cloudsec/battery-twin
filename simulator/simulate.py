@@ -13,6 +13,12 @@ TOPIC = f"battery/{CELL_ID}/telemetry"
 CAPACITY_AH = 2.5
 R0 = 0.05  # must match twin.py's R0 for the expected-voltage comparison to make sense
 
+# Charge/discharge cycling: discharge until LOW_SOC, then charge until HIGH_SOC, repeat.
+DISCHARGE_CURRENT = -2.0
+CHARGE_CURRENT = 2.0
+LOW_SOC = 20.0
+HIGH_SOC = 90.0
+
 MQTT_USERNAME = "twinuser"
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "change_me")
 
@@ -38,9 +44,10 @@ if not connected.wait(timeout=10):
     client.loop_stop()
     raise SystemExit(1)
 
-voltage = 3.9
-temperature = 25.0
 soc_estimate = 80.0  # simulator's own rough SoC tracker, used only to steer voltage
+voltage = 3.0 + (soc_estimate / 100) * 1.2  # start consistent with the SoC
+temperature = 25.0
+charging = False  # False = discharging, True = charging
 fault_until = 0  # timestamp until which a fault is active
 
 
@@ -62,7 +69,16 @@ print("Press Enter at any time to inject a 10-second fault. Press Ctrl+C to stop
 
 try:
     while True:
-        current = -2.0 + random.uniform(-0.1, 0.1)
+        # Decide charge or discharge (with hysteresis so it does not flip-flop)
+        if charging and soc_estimate >= HIGH_SOC:
+            charging = False
+            print(">>> Switching to DISCHARGE <<<")
+        elif not charging and soc_estimate <= LOW_SOC:
+            charging = True
+            print(">>> Switching to CHARGE <<<")
+
+        base_current = CHARGE_CURRENT if charging else DISCHARGE_CURRENT
+        current = base_current + random.uniform(-0.1, 0.1)
 
         soc_estimate += (current * (1 / 3600)) / CAPACITY_AH * 100
         soc_estimate = max(0.0, min(100.0, soc_estimate))
